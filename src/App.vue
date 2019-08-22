@@ -1,17 +1,30 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <DeviceListing v-bind:devices="devices" @device-selected="deviceSelected" />
+    <DeviceDetail v-if="selectedDevice" v-bind:deviceId="selectedDevice"  />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import DeviceListing from './components/DeviceListing.vue'
+import DeviceDetail from './components/DeviceDetail.vue'
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    DeviceListing, DeviceDetail
+  },
+  data: () => {
+    return {
+      selectedDevice: null,
+      devices: [{
+        id: 'cpi3'
+      }]
+    }
+  },
+  methods: {
+    deviceSelected(id) {
+      this.selectedDevice = id
+    }
   }
 }
 </script>
