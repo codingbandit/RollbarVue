@@ -115,8 +115,6 @@ export default {
                 });
                 result = _.sortBy(result, "timestampUtc");
                 this.readings = result;
-                //var grd = this.$refs.grdReadings.kendoWidget()
-                // grd.refresh()
               },
               () => {
                 this.loading = false;
