@@ -1,5 +1,6 @@
 <template>
   <div>
+      <div>{{message}}</div>
     <h1>{{deviceId}}</h1>
     <div v-if="loading">
       <div class="loader"></div>
@@ -34,9 +35,10 @@
 </template>
 
 <script>
-import axios from "axios";
-import moment from "moment";
-import _ from "underscore";
+import now from "performance-now"
+import axios from "axios"
+import moment from "moment"
+import _ from "underscore"
 
 export default {
   name: "DeviceDetail",
@@ -45,6 +47,7 @@ export default {
   },
   data: () => {
     return {
+      message: "",
       readings: [],
       schemaModelFields: {
         deviceId: { type: "string" },
@@ -89,37 +92,48 @@ export default {
         field: "timestampUtc",
         baseUnit: "minutes"
       },
-      loading: false,
-      message: "Status"
-    };
+      loading: false
+    }
   },
   watch: {
     deviceId: {
       immediate: true,
       handler(val) {
         if (val) {
-          this.loading = true;
+          this.loading = true
+          var tStart = now()
           axios
             .get(
-              "http://localhost:7071/api/TelemetryReader?deviceid=" +
-                this.deviceId
+              "http://localhost:7071/api/TelemetryReader?deviceid=" + this.deviceId
             )
             .then(
               response => {
-                this.loading = false;
-                var result = response.data;
-                result.forEach(element => {
-                  var m = moment(element.timestampUtc);
-                  element.timestampUtc = new Date(element.timestampUtc);
-                  element.timestampDisplay = m.format("MM/DD/YYYY hh:mm:ss A");
-                });
-                result = _.sortBy(result, "timestampUtc");
-                this.readings = result;
+                try {
+                    this.loading = false
+                    var result = response.data
+                    result.forEach(element => {
+                        var m = moment(element.timestampUtc)
+                        element.timestampUtc = new Date(element.timestampUtc)
+                        element.timestampDisplay = m.format("MM/DD/YYYY hh:mm:ss A")
+                    })
+                    result = _.sortBy(result, "timestampUtc")
+                    this.readings = result
+                    var tEnd = now()
+                    var duration = tEnd-tStart
+                    this.message = duration.toString()
+                    
+                    if(duration > 1000){
+                        this.$rollbar.warn("Telemetry Reader Service Call took more than 1 second", duration)
+                    }                     
+                } catch(processingError){
+                    this.$rollbar.error(processingError)
+                } 
               },
-              () => {
-                this.loading = false;
+              (err) => {
+                this.loading = false
+                this.$rollbar.error(err)
               }
-            );
+            )
         }
       }
     }
